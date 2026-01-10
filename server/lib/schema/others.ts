@@ -86,8 +86,12 @@ export const message = pgTable("message", {
     .notNull(),
 });
 
-export const conversationRealtions = relations(conversation, ({ many }) => {
+export const conversationRealtions = relations(conversation, ({ one, many }) => {
   return {
+    project: one(project, {
+      fields: [conversation.projectId],
+      references: [project.id],
+    }),
     messages: many(message),
   };
 });
