@@ -13,6 +13,7 @@ import {
 } from "lucide-react";
 import { type DragEvent, useState } from "react";
 import { toast } from "sonner";
+import { validateFile } from "#/upload-config";
 import { getMimeType, isBinaryFile } from "@/lib/file-utils";
 import { client, orpcClient } from "@/lib/orpc";
 import { cn } from "@/lib/utils";
@@ -51,6 +52,12 @@ type FileTreeItem = {
 
 // 上传二进制文件到存储服务
 async function uploadBinaryFile(file: File): Promise<string> {
+  // 前端校验
+  const validation = validateFile(file);
+  if (!validation.valid) {
+    throw new Error(validation.error);
+  }
+
   const formData = new FormData();
   formData.append("file", file);
 
@@ -60,7 +67,8 @@ async function uploadBinaryFile(file: File): Promise<string> {
   });
 
   if (!response.ok) {
-    throw new Error("文件上传失败");
+    const error = await response.json().catch(() => ({}));
+    throw new Error(error.message || "文件上传失败");
   }
 
   const results = await response.json();

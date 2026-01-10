@@ -83,7 +83,9 @@ const MIME_TYPES: Record<string, string> = {
 
 /** 获取文件扩展名（小写） */
 export function getFileExtension(fileName: string): string {
-  return fileName.toLowerCase().slice(fileName.lastIndexOf("."));
+  const dotIndex = fileName.lastIndexOf(".");
+  if (dotIndex === -1 || dotIndex === 0) return "";
+  return fileName.toLowerCase().slice(dotIndex);
 }
 
 /** 判断是否为二进制文件 */
