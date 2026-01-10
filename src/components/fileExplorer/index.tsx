@@ -49,7 +49,13 @@ type FileTreeItem = {
   children?: FileTreeItem[];
 };
 
-// 上传二进制文件到存储服务
+/**
+ * Uploads a binary File to the application's storage service and returns its public URL.
+ *
+ * @param file - The binary File to upload
+ * @returns The URL of the uploaded file
+ * @throws Error when the upload request fails
+ */
 async function uploadBinaryFile(file: File): Promise<string> {
   const formData = new FormData();
   formData.append("file", file);
@@ -67,7 +73,11 @@ async function uploadBinaryFile(file: File): Promise<string> {
   return results[0].url;
 }
 
-// 递归读取文件夹所有内容
+/**
+ * Read all entries from the provided FileSystemDirectoryReader until no more entries remain.
+ *
+ * @returns An array of `FileSystemEntry` objects representing every entry read from the directory reader
+ */
 async function readAllDirectoryEntries(
   reader: FileSystemDirectoryReader,
 ): Promise<FileSystemEntry[]> {
@@ -84,7 +94,12 @@ async function readAllDirectoryEntries(
   return entries;
 }
 
-// 递归读取文件夹内容
+/**
+ * Recursively reads a directory entry and produces a FileTreeItem array representing its files and subfolders.
+ *
+ * @param entry - The directory entry to read
+ * @returns An array of FileTreeItem describing the directory's contents. Text files include `content` and `mimeType`; binary files include `mimeType` and the original `file` object; folders include a `children` array of their entries.
+ */
 async function readDirectoryEntry(
   entry: FileSystemDirectoryEntry,
 ): Promise<FileTreeItem[]> {
@@ -116,7 +131,18 @@ async function readDirectoryEntry(
   return result;
 }
 
-// 递归上传文件结构
+/**
+ * Recursively uploads a FileTreeItem hierarchy into the given project by creating folders and files.
+ *
+ * For items that include a raw File object (binary files), the file is uploaded to storage and the resulting URL
+ * is included when creating the file record. Folder items are created and then their children are uploaded using
+ * the new folder's id as the parent.
+ *
+ * @param projectId - Target project id to create files and folders under
+ * @param parentId - Parent folder id to place items into, or `undefined` to upload at the project root
+ * @param items - Array of FileTreeItem objects representing files and folders to create; items with a `file` field
+ *                are treated as binary and will be uploaded with their resulting URL associated to the created file
+ */
 async function uploadFileTree(
   projectId: number,
   parentId: number | undefined,
@@ -146,7 +172,12 @@ async function uploadFileTree(
   }
 }
 
-// 处理外部拖放的文件/文件夹
+/**
+ * Convert drag-and-drop DataTransfer items into a FileTreeItem structure, preserving binary files as original File objects.
+ *
+ * @param items - The DataTransferItemList obtained from a drag event
+ * @returns An array of FileTreeItem representing the dropped files and folders. Binary files include the original `File` in `file`; text files include their `content`.
+ */
 async function processDroppedItems(
   items: DataTransferItemList,
 ): Promise<FileTreeItem[]> {
@@ -470,6 +501,17 @@ function TreeItem({
   );
 }
 
+/**
+ * Render the project's file explorer and manage its UI state and server-synced operations.
+ *
+ * Displays the project's file tree and provides create/rename/delete/move controls, drag-and-drop
+ * (internal moves and external file/directory uploads), folder expand/collapse state (persisted),
+ * and integration with the editor (open/close tabs and refreshes). Uses React Query mutations
+ * and queries to persist changes and invalidate related caches.
+ *
+ * @param projectId - The numeric ID of the project whose file tree and actions are rendered
+ * @returns The File Explorer React element containing the project tree, controls, dialogs, and upload UI
+ */
 function FileExplorer({ projectId }: { projectId: number }) {
   const [isOpen, setIsOpen] = useState(true);
   const [creating, setCreating] = useState<"file" | "folder" | null>(null);

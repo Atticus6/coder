@@ -81,17 +81,32 @@ const MIME_TYPES: Record<string, string> = {
   ".otf": "font/otf",
 };
 
-/** 获取文件扩展名（小写） */
+/**
+ * Get the file extension including the leading dot in lowercase.
+ *
+ * @returns The file extension including the leading dot in lowercase (for example, `.png`).
+ */
 export function getFileExtension(fileName: string): string {
   return fileName.toLowerCase().slice(fileName.lastIndexOf("."));
 }
 
-/** 判断是否为二进制文件 */
+/**
+ * Determines whether the provided file name or path refers to a binary file.
+ *
+ * @param fileName - The file name or path to check
+ * @returns `true` if the file's extension is recognized as binary, `false` otherwise
+ */
 export function isBinaryFile(fileName: string): boolean {
   return BINARY_EXTENSIONS.includes(getFileExtension(fileName));
 }
 
-/** 判断是否为图片文件 */
+/**
+ * Determines whether a file should be treated as an image.
+ *
+ * @param fileName - The file name or path used to derive the file extension.
+ * @param mimeType - Optional MIME type; when provided and starting with `image/`, it takes precedence.
+ * @returns `true` if the file is an image, `false` otherwise.
+ */
 export function isImageFile(
   fileName: string,
   mimeType?: string | null,
@@ -100,7 +115,11 @@ export function isImageFile(
   return IMAGE_EXTENSIONS.includes(getFileExtension(fileName));
 }
 
-/** 获取文件的 MIME 类型 */
+/**
+ * Resolve the MIME type for a file based on its extension.
+ *
+ * @returns The MIME type string for the file's extension, or `undefined` if unknown.
+ */
 export function getMimeType(fileName: string): string | undefined {
   return MIME_TYPES[getFileExtension(fileName)];
 }

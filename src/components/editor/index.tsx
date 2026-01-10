@@ -10,6 +10,12 @@ import { TopNavigation } from "./TopNavigation";
 
 const DEBOUNCE_MS = 1500;
 
+/**
+ * Renders the editor UI for a project, showing the active file as an image preview, a non-previewable message for binary files, or a code editor with debounced autosave.
+ *
+ * @param projectId - The project identifier used to fetch and save the active file
+ * @returns The rendered editor UI for the specified project
+ */
 function Editor({ projectId }: { projectId: number }) {
   const { activeTabId } = useEditor(projectId);
 
