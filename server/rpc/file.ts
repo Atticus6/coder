@@ -10,7 +10,11 @@ const resolvePathAndCreateFolders = async (
   name: string,
   parentId: number | null,
   excludeId?: number, // 排除的文件夹 id（用于 rename 时排除自身）
-): Promise<{ parentId: number | null; fileName: string; createdFolderIds: number[] }> => {
+): Promise<{
+  parentId: number | null;
+  fileName: string;
+  createdFolderIds: number[];
+}> => {
   const parts = name.split("/").filter((p) => p.length > 0);
   if (parts.length <= 1) {
     return { parentId, fileName: name, createdFolderIds: [] };
@@ -69,15 +73,18 @@ const create = requireAuth
       parentId: z.number().optional(),
       type: z.enum(["file", "folder"]),
       content: z.string().optional(),
+      mimeType: z.string().optional(),
+      fileUrl: z.string().optional(),
     }),
   )
   .handler(async ({ input }) => {
     // 解析路径，自动创建中间文件夹
-    const { parentId, fileName, createdFolderIds } = await resolvePathAndCreateFolders(
-      input.projectId,
-      input.name,
-      input.parentId ?? null,
-    );
+    const { parentId, fileName, createdFolderIds } =
+      await resolvePathAndCreateFolders(
+        input.projectId,
+        input.name,
+        input.parentId ?? null,
+      );
 
     // 检查同名文件/文件夹是否已存在
     const existing = await db.query.file.findFirst({
@@ -110,6 +117,8 @@ const create = requireAuth
         parentId,
         name: fileName,
         content: input.content,
+        mimeType: input.mimeType,
+        fileUrl: input.fileUrl,
       })
       .returning({ id: schema.file.id });
 
@@ -214,12 +223,13 @@ const rename = requireAuth
     }
 
     // 解析路径，基于原文件的 parentId 创建中间文件夹（排除自身避免重复）
-    const { parentId, fileName, createdFolderIds } = await resolvePathAndCreateFolders(
-      input.projectId,
-      input.name,
-      originalFile.parentId,
-      input.id, // 排除自身
-    );
+    const { parentId, fileName, createdFolderIds } =
+      await resolvePathAndCreateFolders(
+        input.projectId,
+        input.name,
+        originalFile.parentId,
+        input.id, // 排除自身
+      );
 
     await db
       .update(schema.file)

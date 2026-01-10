@@ -1,8 +1,10 @@
 import { useQuery } from "@tanstack/react-query";
 import { useRef } from "react";
+import { isBinaryFile, isImageFile } from "@/lib/file-utils";
 import { client, orpcClient } from "@/lib/orpc";
 import CodeEditor from "./CodeEditor";
 import { FileBreadcrumbs } from "./FileBreadcrumbs";
+import ImagePreview from "./ImagePreview";
 import { useEditor } from "./store/use-editor";
 import { TopNavigation } from "./TopNavigation";
 
@@ -27,27 +29,40 @@ function Editor({ projectId }: { projectId: number }) {
       </div>
       <FileBreadcrumbs projectId={projectId} />
       <div className="min-h-0 flex-1 bg-background">
-        {activeFile && (
-          <CodeEditor
-            key={activeFile.id}
-            fileName={activeFile.name}
-            initialValue={activeFile.content}
-            onChange={(content: string) => {
-              if (timeoutRef.current) {
-                clearTimeout(timeoutRef.current);
-              }
+        {activeFile &&
+          (isImageFile(activeFile.name, activeFile.mimeType) ? (
+            <ImagePreview
+              key={activeFile.id}
+              fileName={activeFile.name}
+              content={activeFile.content}
+              mimeType={activeFile.mimeType}
+              fileUrl={activeFile.fileUrl}
+            />
+          ) : isBinaryFile(activeFile.name) ? (
+            <div className="flex size-full items-center justify-center text-muted-foreground">
+              无法预览此文件类型
+            </div>
+          ) : (
+            <CodeEditor
+              key={activeFile.id}
+              fileName={activeFile.name}
+              initialValue={activeFile.content}
+              onChange={(content: string) => {
+                if (timeoutRef.current) {
+                  clearTimeout(timeoutRef.current);
+                }
 
-              const data = {
-                content,
-                id: activeFile.id,
-                projectId,
-              };
-              timeoutRef.current = setTimeout(() => {
-                client.file.updateContent(data);
-              }, DEBOUNCE_MS);
-            }}
-          />
-        )}
+                const data = {
+                  content,
+                  id: activeFile.id,
+                  projectId,
+                };
+                timeoutRef.current = setTimeout(() => {
+                  client.file.updateContent(data);
+                }, DEBOUNCE_MS);
+              }}
+            />
+          ))}
       </div>
     </div>
   );

@@ -13,6 +13,7 @@ import {
 } from "lucide-react";
 import { type DragEvent, useState } from "react";
 import { toast } from "sonner";
+import { getMimeType, isBinaryFile } from "@/lib/file-utils";
 import { client, orpcClient } from "@/lib/orpc";
 import { cn } from "@/lib/utils";
 import { useEditor } from "../editor/store/use-editor";
@@ -42,8 +43,29 @@ type FileTreeItem = {
   name: string;
   type: "file" | "folder";
   content?: string;
+  mimeType?: string;
+  fileUrl?: string;
+  file?: File; // 原始文件对象，用于二进制文件上传
   children?: FileTreeItem[];
 };
+
+// 上传二进制文件到存储服务
+async function uploadBinaryFile(file: File): Promise<string> {
+  const formData = new FormData();
+  formData.append("file", file);
+
+  const response = await fetch("/api/upload", {
+    method: "POST",
+    body: formData,
+  });
+
+  if (!response.ok) {
+    throw new Error("文件上传失败");
+  }
+
+  const results = await response.json();
+  return results[0].url;
+}
 
 // 递归读取文件夹所有内容
 async function readAllDirectoryEntries(
@@ -75,8 +97,16 @@ async function readDirectoryEntry(
       const file = await new Promise<File>((resolve, reject) => {
         (e as FileSystemFileEntry).file(resolve, reject);
       });
-      const content = await file.text();
-      result.push({ name: e.name, type: "file", content });
+      const mimeType = getMimeType(e.name);
+
+      if (isBinaryFile(e.name)) {
+        // 二进制文件保存原始 File 对象，稍后上传
+        result.push({ name: e.name, type: "file", mimeType, file });
+      } else {
+        // 文本文件直接读取内容
+        const content = await file.text();
+        result.push({ name: e.name, type: "file", content, mimeType });
+      }
     } else if (e.isDirectory) {
       const children = await readDirectoryEntry(e as FileSystemDirectoryEntry);
       result.push({ name: e.name, type: "folder", children });
@@ -93,12 +123,21 @@ async function uploadFileTree(
   items: FileTreeItem[],
 ) {
   for (const item of items) {
+    let fileUrl: string | undefined;
+
+    // 如果是二进制文件，先上传到存储服务
+    if (item.file) {
+      fileUrl = await uploadBinaryFile(item.file);
+    }
+
     const result = await client.file.create({
       projectId,
       parentId,
       name: item.name,
       type: item.type,
       content: item.content,
+      mimeType: item.mimeType,
+      fileUrl,
     });
 
     if (item.type === "folder" && item.children) {
@@ -127,8 +166,16 @@ async function processDroppedItems(
       const file = await new Promise<File>((resolve, reject) => {
         (entry as FileSystemFileEntry).file(resolve, reject);
       });
-      const content = await file.text();
-      fileItems.push({ name: entry.name, type: "file", content });
+      const mimeType = getMimeType(entry.name);
+
+      if (isBinaryFile(entry.name)) {
+        // 二进制文件保存原始 File 对象
+        fileItems.push({ name: entry.name, type: "file", mimeType, file });
+      } else {
+        // 文本文件直接读取内容
+        const content = await file.text();
+        fileItems.push({ name: entry.name, type: "file", content, mimeType });
+      }
     } else if (entry.isDirectory) {
       const children = await readDirectoryEntry(
         entry as FileSystemDirectoryEntry,
@@ -438,7 +485,7 @@ function FileExplorer({ projectId }: { projectId: number }) {
   const queryClient = useQueryClient();
   const navigate = useNavigate();
 
-  const { openFile } = useEditor(projectId);
+  const { openFile, closeTab, openTabs } = useEditor(projectId);
 
   const { data: project } = useQuery(
     orpcClient.project.getById.queryOptions({ input: projectId }),
@@ -518,6 +565,28 @@ function FileExplorer({ projectId }: { projectId: number }) {
     });
   };
 
+  // 使文件名和路径查询失效（用于重命名和删除后更新标签页显示）
+  const invalidateFileQueries = (fileId: number) => {
+    queryClient.invalidateQueries({
+      queryKey: orpcClient.file.getNameById.queryKey({ input: fileId }),
+    });
+    queryClient.invalidateQueries({
+      queryKey: orpcClient.file.getPathById.queryKey({ input: fileId }),
+    });
+    queryClient.invalidateQueries({
+      queryKey: orpcClient.file.getById.queryKey({ input: fileId }),
+    });
+  };
+
+  // 使所有打开标签页的路径查询失效（用于文件夹重命名/移动后更新子文件的面包屑）
+  const invalidateAllOpenTabPaths = () => {
+    for (const fileId of openTabs) {
+      queryClient.invalidateQueries({
+        queryKey: orpcClient.file.getPathById.queryKey({ input: fileId }),
+      });
+    }
+  };
+
   // 更新文件/文件夹的打开状态（异步保存，不等待）
   const { mutate: updateOpen } = useMutation(
     orpcClient.file.updateOpen.mutationOptions(),
@@ -530,7 +599,7 @@ function FileExplorer({ projectId }: { projectId: number }) {
 
   const { mutate: createFile } = useMutation(
     orpcClient.file.create.mutationOptions({
-      onSuccess: (data) => {
+      onSuccess: (data, variables) => {
         // 把新创建的文件夹加到展开状态
         if (data.createdFolderIds.length > 0) {
           setExpandedIds((prev) => {
@@ -542,13 +611,17 @@ function FileExplorer({ projectId }: { projectId: number }) {
           });
         }
         invalidateFileTree();
+        // 新建文件时自动打开并 pin 住
+        if (variables.type === "file") {
+          openFile(data.id, { pinned: true });
+        }
       },
     }),
   );
 
   const { mutate: renameFile } = useMutation(
     orpcClient.file.rename.mutationOptions({
-      onSuccess: (data) => {
+      onSuccess: (data, variables) => {
         // 把新创建的文件夹加到展开状态
         if (data.createdFolderIds.length > 0) {
           setExpandedIds((prev) => {
@@ -560,19 +633,33 @@ function FileExplorer({ projectId }: { projectId: number }) {
           });
         }
         invalidateFileTree();
+        // 更新标签页显示的文件名
+        invalidateFileQueries(variables.id);
+        // 文件夹重命名时，更新所有子文件的面包屑路径
+        invalidateAllOpenTabPaths();
       },
     }),
   );
 
   const { mutate: deleteFile } = useMutation(
     orpcClient.file.remove.mutationOptions({
-      onSuccess: invalidateFileTree,
+      onSuccess: (_, variables) => {
+        invalidateFileTree();
+        // 关闭被删除文件的标签页
+        closeTab(variables.id);
+      },
     }),
   );
 
   const { mutate: moveFile } = useMutation(
     orpcClient.file.move.mutationOptions({
-      onSuccess: invalidateFileTree,
+      onSuccess: (_, variables) => {
+        invalidateFileTree();
+        // 更新标签页显示的路径
+        invalidateFileQueries(variables.id);
+        // 文件夹移动时，更新所有子文件的面包屑路径
+        invalidateAllOpenTabPaths();
+      },
     }),
   );
 
