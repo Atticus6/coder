@@ -93,7 +93,7 @@ async function uploadFileTree(
   items: FileTreeItem[],
 ) {
   for (const item of items) {
-    const newId = await client.file.create({
+    const result = await client.file.create({
       projectId,
       parentId,
       name: item.name,
@@ -102,7 +102,7 @@ async function uploadFileTree(
     });
 
     if (item.type === "folder" && item.children) {
-      await uploadFileTree(projectId, newId, item.children);
+      await uploadFileTree(projectId, result.id, item.children);
     }
   }
 }
@@ -530,13 +530,37 @@ function FileExplorer({ projectId }: { projectId: number }) {
 
   const { mutate: createFile } = useMutation(
     orpcClient.file.create.mutationOptions({
-      onSuccess: invalidateFileTree,
+      onSuccess: (data) => {
+        // 把新创建的文件夹加到展开状态
+        if (data.createdFolderIds.length > 0) {
+          setExpandedIds((prev) => {
+            const next = new Set(prev);
+            for (const id of data.createdFolderIds) {
+              next.add(id);
+            }
+            return next;
+          });
+        }
+        invalidateFileTree();
+      },
     }),
   );
 
   const { mutate: renameFile } = useMutation(
     orpcClient.file.rename.mutationOptions({
-      onSuccess: invalidateFileTree,
+      onSuccess: (data) => {
+        // 把新创建的文件夹加到展开状态
+        if (data.createdFolderIds.length > 0) {
+          setExpandedIds((prev) => {
+            const next = new Set(prev);
+            for (const id of data.createdFolderIds) {
+              next.add(id);
+            }
+            return next;
+          });
+        }
+        invalidateFileTree();
+      },
     }),
   );
 
@@ -588,7 +612,7 @@ function FileExplorer({ projectId }: { projectId: number }) {
   };
 
   const handleRename = (fileId: number, name: string) => {
-    renameFile({ id: fileId, name });
+    renameFile({ id: fileId, name, projectId });
   };
 
   const handleDelete = (fileId: number) => {
