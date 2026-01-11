@@ -10,18 +10,21 @@ import {
 import { z } from "zod";
 import { requireAuth } from "./orpc";
 
-const getProjects = requireAuth.handler(async ({ context: { user } }) => {
-  const projects = await db.query.project.findMany({
-    where(fields, operators) {
-      return operators.eq(fields.ownerId, user.id);
-    },
-    orderBy(fields, operators) {
-      return operators.desc(fields.createdAt);
-    },
-  });
+const getProjects = requireAuth
+  .input(z.number().positive().optional())
+  .handler(async ({ context: { user }, input }) => {
+    const projects = await db.query.project.findMany({
+      where(fields, operators) {
+        return operators.eq(fields.ownerId, user.id);
+      },
+      orderBy(fields, operators) {
+        return operators.desc(fields.updatedAt);
+      },
+      limit: input,
+    });
 
-  return projects;
-});
+    return projects;
+  });
 
 const create = requireAuth.handler(async ({ context: { user } }) => {
   const projectName = uniqueNamesGenerator({
