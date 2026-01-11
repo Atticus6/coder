@@ -60,11 +60,19 @@ function FileExplorer({ projectId }: { projectId: number }) {
   const { openFile, closeTab, openTabs } = useEditor(projectId);
 
   const { data: project } = useQuery(
-    orpcClient.project.getById.queryOptions({ input: projectId }),
+    orpcClient.project.getById.queryOptions({
+      input: projectId,
+      refetchInterval(query) {
+        return query.state.data?.importStatus === "importing" ? 1500 : false;
+      },
+    }),
   );
 
   const { data: fileTree } = useQuery(
-    orpcClient.file.getFileTree.queryOptions({ input: { projectId } }),
+    orpcClient.file.getFileTree.queryOptions({
+      input: { projectId },
+      refetchInterval: project?.importStatus === "importing" ? 1500 : false,
+    }),
   );
 
   // 初始化展开状态

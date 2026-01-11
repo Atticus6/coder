@@ -4,6 +4,7 @@ export const customTheme = EditorView.theme({
   "&": {
     outline: "none !important",
     height: "100%",
+    paddingLeft: "calc(var(--spacing) * 4)",
   },
   ".cm-content": {
     fontFamily: "var(--font-plex-mono), monospace",

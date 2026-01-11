@@ -12,9 +12,9 @@ import { requireAuth } from "./orpc";
 
 const getSuggestion = requireAuth
   .input(suggestionRequestSchema)
-  .handler(async ({ input }) => {
+  .handler(async () => {
     SUGGESTION_PROMPT;
-    console.log(input);
+    // console.log(input);
 
     return "test";
     // const {

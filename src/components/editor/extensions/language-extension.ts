@@ -4,10 +4,19 @@ import { javascript } from "@codemirror/lang-javascript";
 import { json } from "@codemirror/lang-json";
 import { markdown } from "@codemirror/lang-markdown";
 import { python } from "@codemirror/lang-python";
+import { yaml } from "@codemirror/lang-yaml";
+import { StreamLanguage } from "@codemirror/language";
+import { dockerFile } from "@codemirror/legacy-modes/mode/dockerfile";
 import type { Extension } from "@codemirror/state";
 
 export const getLanguageExtension = (filename: string): Extension => {
   const ext = filename.split(".").pop()?.toLowerCase();
+  const basename = filename.split("/").pop()?.toLowerCase();
+
+  // Dockerfile 没有扩展名，按文件名匹配
+  if (basename === "dockerfile" || basename?.startsWith("dockerfile.")) {
+    return StreamLanguage.define(dockerFile);
+  }
 
   switch (ext) {
     case "js":
@@ -29,6 +38,9 @@ export const getLanguageExtension = (filename: string): Extension => {
       return markdown();
     case "py":
       return python();
+    case "yml":
+    case "yaml":
+      return yaml();
     default:
       return [];
   }
