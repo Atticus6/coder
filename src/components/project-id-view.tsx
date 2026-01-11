@@ -7,14 +7,16 @@ import { useEffect, useState } from "react";
 import { FaGithub } from "react-icons/fa";
 import { orpcClient } from "@/lib/orpc";
 import { cn } from "@/lib/utils";
+import { ConversationSidebar } from "./conversationSidebar";
 import Editor from "./editor";
 import { useEditorStore } from "./editor/store/use-editor-store";
 import FileExplorer from "./fileExplorer";
 
 const MIN_SIDEBAR_WIDTH = 200;
 const MAX_SIDEBAR_WIDTH = 800;
-const DEFAULT_SIDEBAR_WIDTH = 350;
-const DEFAULT_MAIN_SIZE = 1000;
+const DEFAULT_FILE_TREE_WIDTH = 250;
+const DEFAULT_EDITOR_WIDTH = 600;
+const DEFAULT_CONVERSATION_WIDTH = 400;
 
 const Tab = ({
   label,
@@ -92,6 +94,7 @@ export const ProjectIdView = () => {
 
   return (
     <div className="flex h-full flex-col">
+      {/* 顶部 Navbar */}
       <nav className="flex h-8.75 shrink-0 items-center border-b bg-sidebar">
         <Tab
           label="Code"
@@ -110,6 +113,8 @@ export const ProjectIdView = () => {
           </div>
         </div>
       </nav>
+
+      {/* 下方三栏布局：文件树 | 编辑器 | 对话框 */}
       <div className="relative flex-1">
         <div
           className={cn(
@@ -117,17 +122,31 @@ export const ProjectIdView = () => {
             activeView === "editor" ? "visible" : "invisible",
           )}
         >
-          <Allotment defaultSizes={[DEFAULT_SIDEBAR_WIDTH, DEFAULT_MAIN_SIZE]}>
+          <Allotment
+            defaultSizes={[
+              DEFAULT_FILE_TREE_WIDTH,
+              DEFAULT_EDITOR_WIDTH,
+              DEFAULT_CONVERSATION_WIDTH,
+            ]}
+          >
             <Allotment.Pane
               snap
               minSize={MIN_SIDEBAR_WIDTH}
               maxSize={MAX_SIDEBAR_WIDTH}
-              preferredSize={DEFAULT_SIDEBAR_WIDTH}
+              preferredSize={DEFAULT_FILE_TREE_WIDTH}
             >
               <FileExplorer projectId={projectId} />
             </Allotment.Pane>
             <Allotment.Pane>
               <Editor projectId={projectId} />
+            </Allotment.Pane>
+            <Allotment.Pane
+              snap
+              minSize={MIN_SIDEBAR_WIDTH}
+              maxSize={MAX_SIDEBAR_WIDTH}
+              preferredSize={DEFAULT_CONVERSATION_WIDTH}
+            >
+              <ConversationSidebar />
             </Allotment.Pane>
           </Allotment>
         </div>
