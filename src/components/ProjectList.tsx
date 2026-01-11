@@ -40,7 +40,11 @@ const getProjectIcon = (project: Project) => {
   return <GlobeIcon className="size-3.5 text-muted-foreground" />;
 };
 
-export function ProjectList() {
+interface ProjectsListProps {
+  onViewAll: () => void;
+}
+
+export function ProjectList({ onViewAll }: ProjectsListProps) {
   const { data } = useQuery(
     orpcClient.project.getProjects.queryOptions({
       input: 6,
@@ -61,7 +65,7 @@ export function ProjectList() {
         <div className="flex items-center justify-between gap-2">
           <span className="text-muted-foreground text-xs">Recent projects</span>
           <button
-            //   onClick={onViewAll}
+            onClick={onViewAll}
             className="flex items-center gap-2 text-muted-foreground text-xs transition-colors hover:text-foreground"
           >
             <span>View all</span>
