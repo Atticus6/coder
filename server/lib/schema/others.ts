@@ -19,7 +19,7 @@ export const project = pgTable("project", {
     .$type<"completed" | "failed" | "importing">()
     .default("completed")
     .notNull(),
-  // 编辑器状态
+  // 编辑器状态（不使用外键约束，因为与 file 表存在循环引用，通过应用层处理删除时的清理）
   activeTabId: integer("active_tab_id"),
   previewTabId: integer("preview_tab_id"),
   createdAt: timestamp("created_at").defaultNow().notNull(),
@@ -40,7 +40,12 @@ export const file = pgTable("file", {
   }),
 
   type: text().$type<"file" | "folder">().default("file").notNull(),
+  // 文本文件内容
   content: text().default("").notNull(),
+  // 二进制文件的存储 URL
+  fileUrl: text("file_url"),
+  // MIME 类型，用于区分文本文件和二进制文件
+  mimeType: text("mime_type"),
   // 文件夹: 是否展开 / 文件: 是否在编辑器中打开
   isOpen: boolean("is_open").default(false).notNull(),
   createdAt: timestamp("created_at").defaultNow().notNull(),
