@@ -130,40 +130,13 @@ async function importFilesRecursive(
 
         const fileResponse = await fetch(item.download_url);
         if (!fileResponse.ok) continue;
-
-        if (isBinary) {
-          // 二进制文件：保存到 storage
-          const buffer = Buffer.from(await fileResponse.arrayBuffer());
-          const fileUrl = await storage.upload(buffer, item.name);
-          const mimeType = getMimeType(item.name);
-
-          await db.insert(schema.file).values({
-            projectId,
-            type: "file",
-            parentId,
-            name: item.name,
-            mimeType,
-            fileUrl,
-          });
-        } else {
-          // 文本文件：保存内容
-          const content = await fileResponse.text();
-
-          await db.insert(schema.file).values({
-            projectId,
-            type: "file",
-            parentId,
-            name: item.name,
-            content,
-          });
-        }
         const buffer = Buffer.from(await fileResponse.arrayBuffer());
 
-        // 检测是否为二进制内容（包含 null 字节）
+        // Check for binary content (contains null bytes)
         const hasNullByte = buffer.includes(0x00);
 
         if (isBinary) {
-          // 已知二进制类型：保存到 storage
+          // Binary file: save to storage
           const fileUrl = await storage.upload(buffer, item.name);
           const mimeType = getMimeType(item.name);
 
@@ -176,6 +149,8 @@ async function importFilesRecursive(
             fileUrl,
           });
         } else if (hasNullByte) {
+          // Binary content detected but not in known binary types - skip
+          console.warn(`Skipping file with null bytes: ${item.name}`);
         } else {
           // 文本文件：保存内容
           const content = buffer.toString("utf-8");
