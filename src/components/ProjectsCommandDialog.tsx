@@ -43,9 +43,11 @@ export const ProjectsCommandDialog = ({
 }: ProjectsCommandDialogProps) => {
   const nav = useNavigate();
 
-  const { data: projects } = useQuery(
-    orpcClient.project.getProjects.queryOptions(),
-  );
+  const {
+    data: projects,
+    isLoading,
+    isError,
+  } = useQuery(orpcClient.project.getProjects.queryOptions());
 
   const handleSelect = (projectId: number) => {
     nav({
@@ -67,7 +69,17 @@ export const ProjectsCommandDialog = ({
     >
       <CommandInput placeholder="Search projects..." />
       <CommandList>
-        <CommandEmpty>No projects found.</CommandEmpty>
+        {isLoading ? (
+          <div className="py-6 text-center text-muted-foreground text-sm">
+            Loading projects...
+          </div>
+        ) : isError ? (
+          <div className="py-6 text-center text-destructive text-sm">
+            Failed to load projects. Please try again.
+          </div>
+        ) : (
+          <CommandEmpty>No projects found.</CommandEmpty>
+        )}
         <CommandGroup heading="Projects">
           {projects?.map((project) => (
             <CommandItem

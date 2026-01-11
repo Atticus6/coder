@@ -11,7 +11,7 @@ import { z } from "zod";
 import { requireAuth } from "./orpc";
 
 const getProjects = requireAuth
-  .input(z.number().optional())
+  .input(z.number().positive().optional())
   .handler(async ({ context: { user }, input }) => {
     const projects = await db.query.project.findMany({
       where(fields, operators) {

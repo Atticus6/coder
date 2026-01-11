@@ -36,7 +36,7 @@ export function RenameProjectDialog({
           onChange={(e) => onProjectNameChange(e.target.value)}
           placeholder="项目名称"
           onKeyDown={(e) => {
-            if (e.key === "Enter") onConfirm();
+            if (e.key === "Enter" && !isPending) onConfirm();
           }}
         />
         <DialogFooter>
