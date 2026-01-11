@@ -1,5 +1,5 @@
 import { useQueryClient } from "@tanstack/react-query";
-import { createFileRoute } from "@tanstack/react-router";
+import { createFileRoute, redirect } from "@tanstack/react-router";
 import { SparkleIcon } from "lucide-react";
 import { useEffect, useState } from "react";
 import { FaGithub } from "react-icons/fa";
@@ -12,6 +12,15 @@ import { cn } from "@/lib/utils";
 
 export const Route = createFileRoute("/")({
   component: App,
+  async loader(ctx) {
+    const currentUser = await ctx.context.queryClient.ensureQueryData(
+      orpcClient.profile.getCurrentUser.queryOptions(),
+    );
+
+    if (!currentUser || !currentUser.id) {
+      throw redirect({ to: "/sign-in" });
+    }
+  },
 });
 
 function App() {
@@ -49,7 +58,7 @@ function App() {
         onOpenChange={setCommandDialogOpen}
       />
       <div className="flex min-h-screen flex-col items-center justify-center bg-sidebar p-6 md:p-16">
-        <div className="mx-auto flex w-full max-w-sm flex-col items-center gap-4">
+        <div className="mx-auto flex w-full max-w-xl flex-col items-center gap-4">
           <div className="flex w-full items-center justify-between gap-4">
             <div className="group/logo flex w-full items-center gap-2">
               <img

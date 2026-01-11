@@ -1,10 +1,11 @@
 "use client";
 
+import { useQueryClient, useSuspenseQuery } from "@tanstack/react-query";
 import { useNavigate } from "@tanstack/react-router";
 import { LogOutIcon } from "lucide-react";
-
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { authClient } from "@/lib/auth-client";
+import { orpcClient } from "@/lib/orpc";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -14,45 +15,42 @@ import {
 } from "./ui/dropdown-menu";
 
 export function UserButton() {
-  const { data: session, isPending } = authClient.useSession();
+  const { data: currentUser } = useSuspenseQuery(
+    orpcClient.profile.getCurrentUser.queryOptions(),
+  );
 
   const nav = useNavigate();
+  const queryClient = useQueryClient();
 
   const handleSignOut = async () => {
     await authClient.signOut();
+    // 清除 TanStack Query 缓存
+    queryClient.clear();
     nav({ to: "/sign-in" });
   };
-
-  if (isPending) {
-    return <div className="size-8 animate-pulse rounded-full bg-muted" />;
-  }
-
-  if (!session?.user) {
-    return null;
-  }
 
   return (
     <DropdownMenu>
       <DropdownMenuTrigger className="outline-none">
         <Avatar>
-          <AvatarImage src={session.user.image || ""} />
-          <AvatarFallback>{session.user.name}</AvatarFallback>
+          <AvatarImage src={currentUser.image || ""} />
+          <AvatarFallback>{currentUser.name}</AvatarFallback>
         </Avatar>
       </DropdownMenuTrigger>
       <DropdownMenuContent align="end" className="w-56">
         <div className="flex items-center gap-2 p-2">
           <Avatar>
-            <AvatarImage src={session.user.image || ""} />
-            <AvatarFallback>{session.user.name}</AvatarFallback>
+            <AvatarImage src={currentUser.image || ""} />
+            <AvatarFallback>{currentUser.name}</AvatarFallback>
           </Avatar>
           <div className="flex flex-col overflow-hidden">
-            {session.user.name && (
+            {currentUser.name && (
               <span className="truncate font-medium text-sm">
-                {session.user.name}
+                {currentUser.name}
               </span>
             )}
             <span className="truncate text-muted-foreground text-xs">
-              {session.user.email}
+              {currentUser.email}
             </span>
           </div>
         </div>

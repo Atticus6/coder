@@ -91,15 +91,18 @@ export const message = pgTable("message", {
     .notNull(),
 });
 
-export const conversationRealtions = relations(conversation, ({ one, many }) => {
-  return {
-    project: one(project, {
-      fields: [conversation.projectId],
-      references: [project.id],
-    }),
-    messages: many(message),
-  };
-});
+export const conversationRealtions = relations(
+  conversation,
+  ({ one, many }) => {
+    return {
+      project: one(project, {
+        fields: [conversation.projectId],
+        references: [project.id],
+      }),
+      messages: many(message),
+    };
+  },
+);
 
 export const messageRelations = relations(message, ({ one }) => {
   return {
