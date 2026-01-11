@@ -1,8 +1,9 @@
 import { useQueryClient } from "@tanstack/react-query";
-import { createFileRoute } from "@tanstack/react-router";
+import { createFileRoute, redirect } from "@tanstack/react-router";
 import { SparkleIcon } from "lucide-react";
 import { useEffect, useState } from "react";
 import { FaGithub } from "react-icons/fa";
+import { GitHubImportDialog } from "@/components/GitHubImportDialog";
 import { ProjectList } from "@/components/ProjectList";
 import { ProjectsCommandDialog } from "@/components/ProjectsCommandDialog";
 import { Button } from "@/components/ui/button";
@@ -12,12 +13,22 @@ import { cn } from "@/lib/utils";
 
 export const Route = createFileRoute("/")({
   component: App,
+  async loader(ctx) {
+    const currentUser = await ctx.context.queryClient.ensureQueryData(
+      orpcClient.profile.getCurrentUser.queryOptions(),
+    );
+
+    if (!currentUser || !currentUser.id) {
+      throw redirect({ to: "/sign-in" });
+    }
+  },
 });
 
 function App() {
   const queryClient = useQueryClient();
 
   const [commandDialogOpen, setCommandDialogOpen] = useState(false);
+  const [importDialogOpen, setImportDialogOpen] = useState(false);
 
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
@@ -35,6 +46,10 @@ function App() {
           e.preventDefault();
           setCommandDialogOpen(true);
         }
+        if (e.key === "i") {
+          e.preventDefault();
+          setImportDialogOpen(true);
+        }
       }
     };
 
@@ -48,8 +63,12 @@ function App() {
         open={commandDialogOpen}
         onOpenChange={setCommandDialogOpen}
       />
+      <GitHubImportDialog
+        open={importDialogOpen}
+        onOpenChange={setImportDialogOpen}
+      />
       <div className="flex min-h-screen flex-col items-center justify-center bg-sidebar p-6 md:p-16">
-        <div className="mx-auto flex w-full max-w-sm flex-col items-center gap-4">
+        <div className="mx-auto flex w-full max-w-xl flex-col items-center gap-4">
           <div className="flex w-full items-center justify-between gap-4">
             <div className="group/logo flex w-full items-center gap-2">
               <img
@@ -100,7 +119,7 @@ function App() {
               </Button>
               <Button
                 variant="outline"
-                onClick={() => {}}
+                onClick={() => setImportDialogOpen(true)}
                 className="flex h-full flex-col items-start justify-start gap-6 rounded-none border bg-background p-4"
               >
                 <div className="flex w-full items-center justify-between">

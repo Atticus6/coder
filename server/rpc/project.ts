@@ -1,4 +1,11 @@
 import { db, schema } from "!/lib/db";
+import {
+  canAccessRepo,
+  createOctokit,
+  getGitHubAccessToken,
+  parseGitHubUrl,
+} from "!/lib/github";
+import { importFromGitHub as importFromGitHubWorkflow } from "!/workflows/github-import";
 import { ORPCError } from "@orpc/server";
 import { and, eq } from "drizzle-orm";
 import {
@@ -7,6 +14,7 @@ import {
   colors,
   uniqueNamesGenerator,
 } from "unique-names-generator";
+import { start } from "workflow/api";
 import { z } from "zod";
 import { requireAuth } from "./orpc";
 
@@ -131,6 +139,60 @@ const updateEditorState = requireAuth
     return true;
   });
 
+// 从 GitHub 导入项目
+const importFromGitHub = requireAuth
+  .input(z.object({ url: z.url() }))
+  .handler(async ({ input, context: { user } }) => {
+    const parsed = parseGitHubUrl(input.url);
+    if (!parsed) {
+      throw new ORPCError("BAD_REQUEST", { message: "无效的 GitHub URL" });
+    }
+
+    const { owner, repo, branch, path } = parsed;
+
+    // 获取用户的 GitHub access token
+    const accessToken = await getGitHubAccessToken(user.id);
+    const octokit = createOctokit(accessToken);
+
+    // 检查是否能访问仓库
+    const canAccess = await canAccessRepo(octokit, owner, repo);
+    if (!canAccess) {
+      if (accessToken) {
+        throw new ORPCError("FORBIDDEN", {
+          message: "无法访问该仓库，请确认仓库存在且您有访问权限",
+        });
+      }
+      throw new ORPCError("FORBIDDEN", {
+        message: "无法访问该仓库。如果是私有仓库，请先使用 GitHub 登录",
+      });
+    }
+
+    // 创建项目，初始状态为 importing
+    const [project] = await db
+      .insert(schema.project)
+      .values({
+        ownerId: user.id,
+        name: repo,
+        importStatus: "importing",
+      })
+      .returning({ id: schema.project.id });
+
+    // 使用 workflow 异步导入文件
+
+    await start(importFromGitHubWorkflow, [
+      {
+        projectId: project.id,
+        owner,
+        repo,
+        path,
+        branch,
+        accessToken,
+      },
+    ]);
+
+    return { projectId: project.id };
+  });
+
 export const projectRouter = {
   getProjects,
   create,
@@ -138,4 +200,5 @@ export const projectRouter = {
   rename,
   remove,
   updateEditorState,
+  importFromGitHub,
 };
