@@ -31,7 +31,7 @@ function App() {
                 // font.className,
               )}
             >
-              Point
+              Coder
             </h1>
           </div>
         </div>
