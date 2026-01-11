@@ -96,16 +96,16 @@ const Tab = ({
           onClick={() => closeOtherTabs(fileId)}
           disabled={!hasOtherTabs}
         >
-          关闭其他
+          Close Others
         </ContextMenuItem>
         <ContextMenuItem
           onClick={() => closeTabsToTheRight(fileId)}
           disabled={!hasTabsToTheRight}
         >
-          关闭右侧
+          Close to the Right
         </ContextMenuItem>
         <ContextMenuSeparator />
-        <ContextMenuItem onClick={closeAllTabs}>关闭全部</ContextMenuItem>
+        <ContextMenuItem onClick={closeAllTabs}>Close All</ContextMenuItem>{" "}
       </ContextMenuContent>
     </ContextMenu>
   );

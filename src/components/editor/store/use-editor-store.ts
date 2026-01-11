@@ -188,6 +188,8 @@ export const useEditorStore = create<EditorStore>()((set, get) => ({
     const state = tabs.get(projectId) ?? defaultTabState;
     const { openTabs, previewTabId } = state;
 
+    if (!openTabs.includes(fileId)) return;
+
     // 关闭除了当前文件之外的所有文件
     for (const id of openTabs) {
       if (id !== fileId) {
