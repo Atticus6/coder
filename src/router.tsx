@@ -1,6 +1,6 @@
 import { QueryClient } from "@tanstack/react-query";
 import { createRouter } from "@tanstack/react-router";
-import type { Session } from "./lib/auth-client";
+
 import { routeTree } from "./routeTree.gen";
 
 export const queryClient = new QueryClient({
@@ -28,5 +28,4 @@ declare module "@tanstack/react-router" {
 
 export type RouterContext = {
   queryClient: QueryClient;
-  session: Session | null;
 };
