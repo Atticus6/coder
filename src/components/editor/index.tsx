@@ -35,8 +35,8 @@ function Editor({ projectId }: { projectId: number }) {
       </div>
       <FileBreadcrumbs projectId={projectId} />
       <div className="min-h-0 flex-1 bg-background">
-        {activeFile &&
-          (isImageFile(activeFile.name, activeFile.mimeType) ? (
+        {activeFile ? (
+          isImageFile(activeFile.name, activeFile.mimeType) ? (
             <ImagePreview
               key={activeFile.id}
               fileName={activeFile.name}
@@ -46,7 +46,7 @@ function Editor({ projectId }: { projectId: number }) {
             />
           ) : isBinaryFile(activeFile.name) ? (
             <div className="flex size-full items-center justify-center text-muted-foreground">
-              无法预览此文件类型
+              Cannot preview this file type
             </div>
           ) : (
             <CodeEditor
@@ -68,7 +68,14 @@ function Editor({ projectId }: { projectId: number }) {
                 }, DEBOUNCE_MS);
               }}
             />
-          ))}
+          )
+        ) : (
+          <div className="flex size-full flex-col items-center justify-center gap-2 text-muted-foreground">
+            <span className="text-sm">
+              Select the file from the left to start editing
+            </span>
+          </div>
+        )}
       </div>
     </div>
   );

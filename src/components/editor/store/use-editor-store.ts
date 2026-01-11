@@ -30,6 +30,8 @@ interface EditorStore {
   ) => void;
   closeTab: (projectId: number, fileId: number) => void;
   closeAllTabs: (projectId: number) => void;
+  closeOtherTabs: (projectId: number, fileId: number) => void;
+  closeTabsToTheRight: (projectId: number, fileId: number) => void;
   setActiveTab: (projectId: number, fileId: number) => void;
 }
 
@@ -179,6 +181,64 @@ export const useEditorStore = create<EditorStore>()((set, get) => ({
 
     // 保存到数据库
     saveToServer(projectId, null, null);
+  },
+
+  closeOtherTabs: (projectId, fileId) => {
+    const tabs = new Map(get().tabs);
+    const state = tabs.get(projectId) ?? defaultTabState;
+    const { openTabs, previewTabId } = state;
+
+    // 关闭除了当前文件之外的所有文件
+    for (const id of openTabs) {
+      if (id !== fileId) {
+        saveFileOpen(id, false);
+      }
+    }
+
+    const newPreviewTabId = previewTabId === fileId ? previewTabId : null;
+
+    tabs.set(projectId, {
+      openTabs: [fileId],
+      activeTabId: fileId,
+      previewTabId: newPreviewTabId,
+    });
+    set({ tabs });
+
+    // 保存到数据库
+    saveToServer(projectId, fileId, newPreviewTabId);
+  },
+
+  closeTabsToTheRight: (projectId, fileId) => {
+    const tabs = new Map(get().tabs);
+    const state = tabs.get(projectId) ?? defaultTabState;
+    const { openTabs, activeTabId, previewTabId } = state;
+
+    const tabIndex = openTabs.indexOf(fileId);
+    if (tabIndex === -1) return;
+
+    const tabsToClose = openTabs.slice(tabIndex + 1);
+    const newTabs = openTabs.slice(0, tabIndex + 1);
+
+    // 关闭右侧的文件
+    for (const id of tabsToClose) {
+      saveFileOpen(id, false);
+    }
+
+    // 如果当前激活的标签被关闭了，激活当前文件
+    const newActiveTabId =
+      activeTabId && tabsToClose.includes(activeTabId) ? fileId : activeTabId;
+    const newPreviewTabId =
+      previewTabId && tabsToClose.includes(previewTabId) ? null : previewTabId;
+
+    tabs.set(projectId, {
+      openTabs: newTabs,
+      activeTabId: newActiveTabId,
+      previewTabId: newPreviewTabId,
+    });
+    set({ tabs });
+
+    // 保存到数据库
+    saveToServer(projectId, newActiveTabId, newPreviewTabId);
   },
 
   setActiveTab: (projectId, fileId) => {

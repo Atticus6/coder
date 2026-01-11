@@ -186,7 +186,7 @@ export const ConversationSidebar = () => {
       });
     },
     onError: (error) => {
-      toast.error("发送失败", {
+      toast.error("Failed to send", {
         description: error.message,
       });
     },
@@ -241,7 +241,7 @@ export const ConversationSidebar = () => {
       });
     },
     onError: (error) => {
-      toast.error("删除失败", {
+      toast.error("Deletion failed", {
         description: error.message,
       });
     },
@@ -256,7 +256,7 @@ export const ConversationSidebar = () => {
     <div className="flex h-full flex-col bg-sidebar">
       <div className="flex h-8.75 items-center justify-between border-b">
         <div className="truncate pl-3 text-sm">
-          {conversation?.title || "新对话"}
+          {conversation?.title || "New conversation"}
         </div>
         <div className="flex items-center gap-1 px-1">
           {selectedConversationId && (
@@ -278,7 +278,7 @@ export const ConversationSidebar = () => {
             </PopoverTrigger>
             <PopoverContent className="w-64 p-2" align="end">
               <div className="font-medium text-muted-foreground text-xs">
-                历史对话
+                historical conversations
               </div>
               <div className="max-h-64 space-y-1 overflow-y-auto">
                 {conversationList?.length ? (
@@ -294,7 +294,7 @@ export const ConversationSidebar = () => {
                   ))
                 ) : (
                   <div className="py-2 text-center text-muted-foreground text-xs">
-                    暂无历史对话
+                    No historical conversations available
                   </div>
                 )}
               </div>
@@ -311,40 +311,48 @@ export const ConversationSidebar = () => {
       </div>
       <Conversation className="flex-1">
         <ConversationContent>
-          {(conversation?.messages || []).map((message, messageIndex) => (
-            <Message key={message.id} from={message.role}>
-              <MessageContent>
-                {message.status === "processing" ? (
-                  streamingContent ? (
-                    <MessageResponse>{streamingContent}</MessageResponse>
+          {(conversation?.messages || []).length > 0 ? (
+            (conversation?.messages || []).map((message, messageIndex) => (
+              <Message key={message.id} from={message.role}>
+                <MessageContent>
+                  {message.status === "processing" ? (
+                    streamingContent ? (
+                      <MessageResponse>{streamingContent}</MessageResponse>
+                    ) : (
+                      <div className="flex items-center gap-2 text-muted-foreground">
+                        <LoaderIcon className="size-4 animate-spin" />
+                        <span>Thinking...</span>
+                      </div>
+                    )
                   ) : (
-                    <div className="flex items-center gap-2 text-muted-foreground">
-                      <LoaderIcon className="size-4 animate-spin" />
-                      <span>思考中...</span>
-                    </div>
-                  )
-                ) : (
-                  <MessageResponse>{message.content}</MessageResponse>
-                )}
-              </MessageContent>
+                    <MessageResponse>{message.content}</MessageResponse>
+                  )}
+                </MessageContent>
 
-              {message.role === "assistant" &&
-                message.status === "completed" &&
-                messageIndex === (conversation?.messages.length ?? 0) - 1 && (
-                  <MessageActions>
-                    <MessageAction
-                      onClick={() => {
-                        navigator.clipboard.writeText(message.content);
-                        toast.success("已复制到剪贴板");
-                      }}
-                      label="Copy"
-                    >
-                      <CopyIcon className="size-3" />
-                    </MessageAction>
-                  </MessageActions>
-                )}
-            </Message>
-          ))}
+                {message.role === "assistant" &&
+                  message.status === "completed" &&
+                  messageIndex === (conversation?.messages.length ?? 0) - 1 && (
+                    <MessageActions>
+                      <MessageAction
+                        onClick={() => {
+                          navigator.clipboard.writeText(message.content);
+                          toast.success("已复制到剪贴板");
+                        }}
+                        label="Copy"
+                      >
+                        <CopyIcon className="size-3" />
+                      </MessageAction>
+                    </MessageActions>
+                  )}
+              </Message>
+            ))
+          ) : (
+            <div className="flex size-full flex-col items-center justify-center gap-2 text-muted-foreground">
+              <span className="text-sm">
+                Start a new conversation and ask AI questions
+              </span>
+            </div>
+          )}
         </ConversationContent>
         <ConversationScrollButton />
       </Conversation>

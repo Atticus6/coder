@@ -62,10 +62,10 @@ export function ActivityBar() {
           }),
         });
         setRenameOpen(false);
-        toast.success("项目已重命名");
+        toast.success("The project has been renamed");
       },
       onError: (error) => {
-        toast.error("重命名失败", { description: error.message });
+        toast.error("Rename failed", { description: error.message });
       },
     }),
   );
@@ -200,7 +200,7 @@ export function ActivityBar() {
       <Dialog open={settingsOpen} onOpenChange={setSettingsOpen}>
         <DialogContent>
           <DialogHeader>
-            <DialogTitle>项目设置</DialogTitle>
+            <DialogTitle>Project Settings</DialogTitle>
           </DialogHeader>
           <div className="flex flex-col gap-2">
             <Button
@@ -234,12 +234,12 @@ export function ActivityBar() {
       <Dialog open={renameOpen} onOpenChange={setRenameOpen}>
         <DialogContent>
           <DialogHeader>
-            <DialogTitle>重命名项目</DialogTitle>
+            <DialogTitle>Rename project</DialogTitle>
           </DialogHeader>
           <Input
             value={newProjectName}
             onChange={(e) => setNewProjectName(e.target.value)}
-            placeholder="项目名称"
+            placeholder="project name"
             onKeyDown={(e) => {
               if (e.key === "Enter") handleRenameProject();
             }}

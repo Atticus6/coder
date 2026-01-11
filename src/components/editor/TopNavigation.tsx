@@ -3,6 +3,13 @@ import { useQuery } from "@tanstack/react-query";
 import { XIcon } from "lucide-react";
 import { orpcClient } from "@/lib/orpc";
 import { cn } from "@/lib/utils";
+import {
+  ContextMenu,
+  ContextMenuContent,
+  ContextMenuItem,
+  ContextMenuSeparator,
+  ContextMenuTrigger,
+} from "../ui/context-menu";
 import { ScrollArea, ScrollBar } from "../ui/scroll-area";
 import { Spinner } from "../ui/spinner";
 import { useEditor } from "./store/use-editor";
@@ -20,52 +27,87 @@ const Tab = ({
     orpcClient.file.getNameById.queryOptions({ input: fileId }),
   );
 
-  const { activeTabId, previewTabId, setActiveTab, openFile, closeTab } =
-    useEditor(projectId);
+  const {
+    activeTabId,
+    previewTabId,
+    openTabs,
+    setActiveTab,
+    openFile,
+    closeTab,
+    closeOtherTabs,
+    closeTabsToTheRight,
+    closeAllTabs,
+  } = useEditor(projectId);
 
   const isActive = activeTabId === fileId;
   const isPreview = previewTabId === fileId;
+  const tabIndex = openTabs.indexOf(fileId);
+  const hasOtherTabs = openTabs.length > 1;
+  const hasTabsToTheRight = tabIndex < openTabs.length - 1;
 
   return (
-    <div
-      onClick={() => setActiveTab(fileId)}
-      onDoubleClick={() => openFile(fileId, { pinned: true })}
-      className={cn(
-        "group flex h-8.75 cursor-pointer items-center gap-2 border-transparent border-x border-y pr-1.5 pl-2 text-muted-foreground hover:bg-accent/30",
-        isActive &&
-          "-mb-px border-x-border border-b-background bg-background text-foreground drop-shadow",
-        isFirst && "border-l-transparent!",
-      )}
-    >
-      {fileName === undefined ? (
-        <Spinner className="text-ring" />
-      ) : (
-        <FileIcon fileName={fileName} autoAssign className="size-4" />
-      )}
-      <span className={cn("whitespace-nowrap text-sm", isPreview && "italic")}>
-        {fileName}
-      </span>
-      <button
-        onClick={(e) => {
-          e.preventDefault();
-          e.stopPropagation();
-          closeTab(fileId);
-        }}
-        onKeyDown={(e) => {
-          if (e.key === "Enter" || e.key === " ") {
-            e.preventDefault();
-            e.stopPropagation();
-            closeTab(fileId);
-          }
-        }}
-        className={cn(
-          "rounded-sm p-0.5 opacity-0 hover:bg-white/10 group-hover:opacity-100",
-          isActive && "opacity-100",
-        )}
-      >
-        <XIcon className="size-3.5" />
-      </button>
-    </div>
+    <ContextMenu>
+      <ContextMenuTrigger asChild>
+        <div
+          onClick={() => setActiveTab(fileId)}
+          onDoubleClick={() => openFile(fileId, { pinned: true })}
+          className={cn(
+            "group flex h-8.75 cursor-pointer items-center gap-2 border-transparent border-x border-y pr-1.5 pl-2 text-muted-foreground hover:bg-accent/30",
+            isActive &&
+              "-mb-px border-x-border border-b-background bg-background text-foreground drop-shadow",
+            isFirst && "border-l-transparent!",
+          )}
+        >
+          {fileName === undefined ? (
+            <Spinner className="text-ring" />
+          ) : (
+            <FileIcon fileName={fileName} autoAssign className="size-4" />
+          )}
+          <span
+            className={cn("whitespace-nowrap text-sm", isPreview && "italic")}
+          >
+            {fileName}
+          </span>
+          <button
+            onClick={(e) => {
+              e.preventDefault();
+              e.stopPropagation();
+              closeTab(fileId);
+            }}
+            onKeyDown={(e) => {
+              if (e.key === "Enter" || e.key === " ") {
+                e.preventDefault();
+                e.stopPropagation();
+                closeTab(fileId);
+              }
+            }}
+            className={cn(
+              "rounded-sm p-0.5 opacity-0 hover:bg-white/10 group-hover:opacity-100",
+              isActive && "opacity-100",
+            )}
+          >
+            <XIcon className="size-3.5" />
+          </button>
+        </div>
+      </ContextMenuTrigger>
+      <ContextMenuContent>
+        <ContextMenuItem onClick={() => closeTab(fileId)}>关闭</ContextMenuItem>
+        <ContextMenuItem
+          onClick={() => closeOtherTabs(fileId)}
+          disabled={!hasOtherTabs}
+        >
+          关闭其他
+        </ContextMenuItem>
+        <ContextMenuItem
+          onClick={() => closeTabsToTheRight(fileId)}
+          disabled={!hasTabsToTheRight}
+        >
+          关闭右侧
+        </ContextMenuItem>
+        <ContextMenuSeparator />
+        <ContextMenuItem onClick={closeAllTabs}>关闭全部</ContextMenuItem>
+      </ContextMenuContent>
+    </ContextMenu>
   );
 };
 

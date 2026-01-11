@@ -23,6 +23,20 @@ export const useEditor = (projectId: number) => {
     store.closeAllTabs(projectId);
   }, [store, projectId]);
 
+  const closeOtherTabs = useCallback(
+    (fileId: number) => {
+      store.closeOtherTabs(projectId, fileId);
+    },
+    [store, projectId],
+  );
+
+  const closeTabsToTheRight = useCallback(
+    (fileId: number) => {
+      store.closeTabsToTheRight(projectId, fileId);
+    },
+    [store, projectId],
+  );
+
   const setActiveTab = useCallback(
     (fileId: number) => {
       store.setActiveTab(projectId, fileId);
@@ -37,6 +51,8 @@ export const useEditor = (projectId: number) => {
     openFile,
     closeTab,
     closeAllTabs,
+    closeOtherTabs,
+    closeTabsToTheRight,
     setActiveTab,
   };
 };
