@@ -1,30 +1,10 @@
+import { getMimeType } from "@/lib/file-utils";
+
 interface Props {
   fileName: string;
   content: string;
   mimeType?: string | null;
   fileUrl?: string | null;
-}
-
-/**
- * Determine the image MIME type from a file name's extension.
- *
- * @param fileName - The file name including its extension (for example, "photo.jpg")
- * @returns The MIME type that corresponds to the file extension, or `"image/png"` if the extension is not recognized
- */
-function getMimeTypeFromFileName(fileName: string): string {
-  const ext = fileName.toLowerCase().slice(fileName.lastIndexOf("."));
-  const mimeTypes: Record<string, string> = {
-    ".png": "image/png",
-    ".jpg": "image/jpeg",
-    ".jpeg": "image/jpeg",
-    ".gif": "image/gif",
-    ".bmp": "image/bmp",
-    ".ico": "image/x-icon",
-    ".webp": "image/webp",
-    ".avif": "image/avif",
-    ".svg": "image/svg+xml",
-  };
-  return mimeTypes[ext] || "image/png";
 }
 
 /**
@@ -38,7 +18,7 @@ function getMimeTypeFromFileName(fileName: string): string {
  * @returns The rendered image preview element
  */
 function ImagePreview({ fileName, content, mimeType, fileUrl }: Props) {
-  const actualMimeType = mimeType || getMimeTypeFromFileName(fileName);
+  const actualMimeType = mimeType || getMimeType(fileName) || "image/png";
   const isSvg = actualMimeType === "image/svg+xml";
 
   // 优先使用 fileUrl（存储服务的 URL）

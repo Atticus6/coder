@@ -55,7 +55,7 @@ async function uploadBinaryFile(
   file: File,
   mimeType?: string,
 ): Promise<string> {
-  const effectiveType = file.type || mimeType || "";
+  // const effectiveType = file.type || mimeType || "";
   const effectiveFile =
     file.type || !mimeType
       ? file
