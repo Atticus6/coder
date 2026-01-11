@@ -1,8 +1,7 @@
 import { env } from "!/env";
 import { randomUUID } from "node:crypto";
 import { mkdir, unlink, writeFile } from "node:fs/promises";
-import { extname, join } from "node:path";
-
+import { extname, join, resolve, sep } from "node:path";
 // 存储接口
 export interface StorageProvider {
   upload(file: Buffer, fileName: string): Promise<string>;
@@ -12,7 +11,7 @@ export interface StorageProvider {
 
 // 本地存储（开发环境）
 class LocalStorage implements StorageProvider {
-  private uploadDir = "public/uploads";
+  private uploadDir = resolve(process.cwd(), "public", "uploads");
 
   async upload(file: Buffer, fileName: string): Promise<string> {
     // 确保上传目录存在
@@ -32,11 +31,17 @@ class LocalStorage implements StorageProvider {
 
   async delete(fileUrl: string): Promise<void> {
     if (!fileUrl.startsWith("/uploads/")) return;
-    const filePath = join("public", fileUrl);
+    const relative = fileUrl.replace(/^\/uploads\//, "");
+    const base = resolve(this.uploadDir);
+    const filePath = resolve(this.uploadDir, relative);
+    if (!filePath.startsWith(base + sep)) return;
     try {
       await unlink(filePath);
-    } catch {
+    } catch (e) {
       // 文件不存在时忽略错误
+      const err = e as any;
+      if (err?.code === "ENOENT") return;
+      throw e;
     }
   }
 

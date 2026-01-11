@@ -51,16 +51,23 @@ type FileTreeItem = {
 };
 
 // 上传二进制文件到存储服务
-async function uploadBinaryFile(file: File): Promise<string> {
+async function uploadBinaryFile(
+  file: File,
+  mimeType?: string,
+): Promise<string> {
+  const effectiveType = file.type || mimeType || "";
+  const effectiveFile =
+    file.type || !mimeType
+      ? file
+      : new File([file], file.name, { type: mimeType });
   // 前端校验
-  const validation = validateFile(file);
+  const validation = validateFile(effectiveFile);
   if (!validation.valid) {
     throw new Error(validation.error);
   }
 
   const formData = new FormData();
-  formData.append("file", file);
-
+  formData.append("file", effectiveFile);
   const response = await fetch("/api/upload", {
     method: "POST",
     body: formData,
@@ -72,7 +79,11 @@ async function uploadBinaryFile(file: File): Promise<string> {
   }
 
   const results = await response.json();
-  return results[0].url;
+  const url = Array.isArray(results) ? results?.[0]?.url : results?.url;
+  if (typeof url !== "string" || url.length === 0) {
+    throw new Error("文件上传失败: 响应缺少 url");
+  }
+  return url;
 }
 
 // 递归读取文件夹所有内容
@@ -135,7 +146,7 @@ async function uploadFileTree(
 
     // 如果是二进制文件，先上传到存储服务
     if (item.file) {
-      fileUrl = await uploadBinaryFile(item.file);
+      fileUrl = await uploadBinaryFile(item.file, item.mimeType);
     }
 
     const result = await client.file.create({
