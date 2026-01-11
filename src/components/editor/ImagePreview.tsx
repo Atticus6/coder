@@ -5,7 +5,12 @@ interface Props {
   fileUrl?: string | null;
 }
 
-// 根据文件扩展名获取 MIME 类型
+/**
+ * Determine the image MIME type from a file name's extension.
+ *
+ * @param fileName - The file name including its extension (for example, "photo.jpg")
+ * @returns The MIME type that corresponds to the file extension, or `"image/png"` if the extension is not recognized
+ */
 function getMimeTypeFromFileName(fileName: string): string {
   const ext = fileName.toLowerCase().slice(fileName.lastIndexOf("."));
   const mimeTypes: Record<string, string> = {
@@ -22,6 +27,16 @@ function getMimeTypeFromFileName(fileName: string): string {
   return mimeTypes[ext] || "image/png";
 }
 
+/**
+ * Renders a centered, responsive preview for an image file from a URL or provided content.
+ *
+ * Uses `fileUrl` when present; otherwise uses `content` (as raw SVG text for SVG images or as base64 for other image types).
+ *
+ * @param content - File content: raw SVG text when the MIME type is `image/svg+xml`, otherwise base64-encoded image data
+ * @param mimeType - Optional MIME type to use instead of inferring it from `fileName`
+ * @param fileUrl - Optional absolute URL to use as the image source; when provided this takes precedence over `content`
+ * @returns The rendered image preview element
+ */
 function ImagePreview({ fileName, content, mimeType, fileUrl }: Props) {
   const actualMimeType = mimeType || getMimeTypeFromFileName(fileName);
   const isSvg = actualMimeType === "image/svg+xml";
