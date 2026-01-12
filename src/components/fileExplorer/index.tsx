@@ -1,5 +1,9 @@
 import type { FileTreeNode } from "!/rpc/file";
-import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import {
+  useMutation,
+  useQueryClient,
+  useSuspenseQuery,
+} from "@tanstack/react-query";
 import { useNavigate } from "@tanstack/react-router";
 import {
   ChevronRightIcon,
@@ -59,7 +63,7 @@ function FileExplorer({ projectId }: { projectId: number }) {
 
   const { openFile, closeTab, openTabs } = useEditor(projectId);
 
-  const { data: project } = useQuery(
+  const { data: project } = useSuspenseQuery(
     orpcClient.project.getById.queryOptions({
       input: projectId,
       refetchInterval(query) {
@@ -68,10 +72,10 @@ function FileExplorer({ projectId }: { projectId: number }) {
     }),
   );
 
-  const { data: fileTree } = useQuery(
+  const { data: fileTree } = useSuspenseQuery(
     orpcClient.file.getFileTree.queryOptions({
       input: { projectId },
-      refetchInterval: project?.importStatus === "importing" ? 1500 : false,
+      refetchInterval: project.importStatus === "importing" ? 1500 : false,
     }),
   );
 
@@ -303,9 +307,7 @@ function FileExplorer({ projectId }: { projectId: number }) {
                   isOpen && "rotate-90",
                 )}
               />
-              <p className="line-clamp-1 text-xs uppercase">
-                {project?.name ?? "Loading..."}
-              </p>
+              <p className="line-clamp-1 text-xs uppercase">{project.name}</p>
               <div className="ml-auto flex items-center gap-0.5 opacity-0 transition-none duration-0 group-hover/project:opacity-100">
                 <Button
                   variant="ghost"
@@ -345,7 +347,7 @@ function FileExplorer({ projectId }: { projectId: number }) {
           <ContextMenuContent>
             <ContextMenuItem
               onClick={() => {
-                setNewProjectName(project?.name ?? "");
+                setNewProjectName(project.name);
                 setRenameOpen(true);
               }}
             >
@@ -405,7 +407,7 @@ function FileExplorer({ projectId }: { projectId: number }) {
       <DeleteProjectDialog
         open={deleteOpen}
         onOpenChange={setDeleteOpen}
-        projectName={project?.name ?? ""}
+        projectName={project.name}
         onConfirm={() => deleteProjectMutation.mutate(projectId)}
         isPending={deleteProjectMutation.isPending}
       />
