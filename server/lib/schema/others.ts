@@ -15,7 +15,7 @@ export const project = pgTable("project", {
   ownerId: text("owner_id")
     .notNull()
     .references(() => user.id, { onDelete: "cascade" }),
-  importStatus: text()
+  importStatus: text("import_status")
     .$type<"completed" | "failed" | "importing">()
     .default("completed")
     .notNull(),

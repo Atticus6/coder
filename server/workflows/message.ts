@@ -15,7 +15,6 @@ export async function startMessage({
   aiMessageId,
 }: StartMessageInput) {
   "use workflow";
-  console.log("startMessage");
 
   // 获取 writable stream 用于流式输出
   const writable = getWritable<UIMessageChunk>();
@@ -75,7 +74,8 @@ async function generateAIResponse(
       });
     }
 
-    writer.releaseLock();
+    // 关闭流
+    await writer.close();
 
     // 更新消息内容和状态
     await db
@@ -87,7 +87,8 @@ async function generateAIResponse(
       .where(eq(schema.message.id, assistantMessageId));
     return { success: true, content: fullText };
   } catch (error) {
-    writer.releaseLock();
+    // 出错时也要关闭流
+    await writer.close();
 
     // 标记消息为取消状态
     await db

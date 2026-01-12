@@ -1,15 +1,12 @@
-import { auth } from "!/lib/auth";
+import type { Auth } from "!/lib/auth";
 import { ORPCError, os } from "@orpc/server";
 
 export const base = os
-  .$context<{ request: Request }>()
+  .$context<{ request: Request; authState: Auth | null }>()
   .use(async ({ context, next }) => {
-    const session = await auth.api.getSession({
-      headers: context.request.headers,
-    });
     return next({
       context: {
-        ...session,
+        ...context.authState,
       },
     });
   });

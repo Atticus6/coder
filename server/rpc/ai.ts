@@ -67,12 +67,15 @@ const sendMessage = requireAuth
     }
 
     // 插入用户消息
-    await db.insert(schema.message).values({
-      conversationId,
-      status: "completed",
-      role: "user",
-      content: input.message,
-    });
+    const [newUserMessage] = await db
+      .insert(schema.message)
+      .values({
+        conversationId,
+        status: "completed",
+        role: "user",
+        content: input.message,
+      })
+      .returning();
 
     const [newMessage] = await db
       .insert(schema.message)
@@ -88,6 +91,10 @@ const sendMessage = requireAuth
     const { runId } = await start(startMessage, [
       { conversationId, aiMessageId: newMessage.id },
     ]);
+    await db
+      .update(schema.message)
+      .set({ runId })
+      .where(eq(schema.message.id, newUserMessage.id));
 
     return { conversationId, runId };
   });

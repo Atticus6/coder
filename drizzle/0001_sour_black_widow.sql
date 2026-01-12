@@ -1,0 +1,1 @@
+ALTER TABLE "project" RENAME COLUMN "importStatus" TO "import_status";
