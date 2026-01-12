@@ -13,10 +13,10 @@
     "db:migrate": "drizzle-kit migrate",
     "db:push": "drizzle-kit push",
     "studio": "drizzle-kit studio",
-    "flow": "workflow inspect runs --web"
+    "flow": "workflow inspect runs --web --noBrowser -b postgres"
   },
   "dependencies": {
-    "@ai-sdk/openai": "^3.0.7",
+    "@ai-sdk/openai": "^3.0.8",
     "@base-ui/react": "^1.0.0",
     "@codemirror/lang-css": "^6.3.1",
     "@codemirror/lang-html": "^6.4.11",
@@ -45,9 +45,9 @@
     "@tanstack/react-router-devtools": "^1.149.0",
     "@tanstack/router-plugin": "^1.149.0",
     "@workflow/world-postgres": "^4.1.0-beta.27",
-    "ai": "^6.0.27",
+    "ai": "^6.0.28",
     "allotment": "^1.20.5",
-    "better-auth": "^1.4.10",
+    "better-auth": "^1.4.11",
     "class-variance-authority": "^0.7.1",
     "clsx": "^2.1.1",
     "cmdk": "^1.1.1",

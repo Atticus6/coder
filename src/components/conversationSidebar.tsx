@@ -73,6 +73,15 @@ export const ConversationSidebar = () => {
     orpcClient.conversation.getById.queryOptions({
       input: selectedConversationId!,
       enabled: !!selectedConversationId,
+      select(data) {
+        const running = data.messages.find(
+          (item) => item.status === "processing",
+        );
+        if (running?.runId && !currentRunId) {
+          setCurrentRunId(running.runId);
+        }
+        return data;
+      },
     }),
   );
 
@@ -113,12 +122,16 @@ export const ConversationSidebar = () => {
                 if (parsed.type === "text-delta" && parsed.delta) {
                   setStreamingContent((prev) => prev + parsed.delta);
                 }
-              } catch {
+              } catch (e) {
+                console.log("e", e);
+
                 // ignore parse errors
               }
             }
           }
         }
+        console.log("流结束后刷新对话");
+
         // 流结束后刷新对话
         setCurrentRunId(null);
         setStreamingContent("");

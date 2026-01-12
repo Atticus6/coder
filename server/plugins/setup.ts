@@ -26,29 +26,24 @@ async function runMigrations() {
 
     console.log("✅ Database migrations completed!");
   } catch (error) {
-    const message = error instanceof Error ? error.message : String(error);
-    // 如果是"已存在"错误，说明表已创建但迁移记录缺失，可以忽略
-    if (message.includes("already exists")) {
-      console.log("⚠️ Tables already exist, skipping migrations");
-    } else {
-      console.error("❌ Failed to run migrations:", error);
-    }
+    console.error("❌ Failed to run migrations:", error);
+    process.exit(0);
   } finally {
     await pgClient.end();
   }
 }
 
-// 启动时执行迁移
-await runMigrations();
-
-if (process.env.WORKFLOW_TARGET_WORLD === "@workflow/world-postgres") {
-  console.log("Starting Postgres World...");
-
-  const { getWorld } = await import("workflow/runtime");
-  await getWorld().start?.();
-  console.log("Postgres World started");
-}
-
 export default definePlugin(async () => {
+  // 启动时执行迁移
+  await runMigrations();
+
+  if (process.env.WORKFLOW_TARGET_WORLD === "@workflow/world-postgres") {
+    console.log("Starting Postgres World...");
+
+    const { getWorld } = await import("workflow/runtime");
+    await getWorld().start?.();
+    console.log("Postgres World started");
+  }
+
   // nitroApp.hooks.hook("request", async () => {});
 });
