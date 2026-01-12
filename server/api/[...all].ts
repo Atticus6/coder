@@ -68,6 +68,10 @@ app.post("/upload", async (c) => {
 });
 
 app.get("/chat/:runId", async (c) => {
+  if (!c.var.authState) {
+    return c.text("Unauthorized", 401);
+  }
+
   const runId = c.req.param("runId");
 
   const startIndexParam = c.req.query("startIndex");
