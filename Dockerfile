@@ -1,5 +1,5 @@
 # Stage 1: 使用 bun 安装依赖和构建
-FROM oven/bun:1 AS builder
+FROM oven/bun:1-alpine AS builder
 
 WORKDIR /app
 
@@ -16,7 +16,7 @@ COPY . .
 RUN bun run build
 
 # Stage 2: 使用 bun 运行
-FROM oven/bun:1-slim AS runner
+FROM oven/bun:1-alpine AS runner
 WORKDIR /app
 COPY --from=builder /app/.output ./
 
