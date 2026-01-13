@@ -20,9 +20,8 @@ FROM node:22-slim AS runner
 
 WORKDIR /app
 
-# 从 builder 阶段复制构建产物
-COPY --from=builder /app/.output ./.output
-COPY --from=builder /app/package.json ./
+# 从 builder 阶段复制构建产物（.output 内容直接放到 /app）
+COPY --from=builder /app/.output ./
 
 # 设置环境变量
 ENV NODE_ENV=production
@@ -32,4 +31,4 @@ ENV PORT=3000
 EXPOSE 3000
 
 # 使用 Node.js 运行 Nitro 服务
-CMD ["node", ".output/server/index.mjs"]
+CMD ["node", "./server/index.mjs"]
