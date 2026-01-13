@@ -18,7 +18,7 @@ const app = new Hono<{
   .basePath("/api")
   .use(logger())
 
-  .notFound((c) => c.text("404"));
+  .notFound((c) => c.text("404", 404));
 
 app.use("*", async (c, next) => {
   const authState = await auth.api.getSession({ headers: c.req.raw.headers });
@@ -67,7 +67,7 @@ app.post("/upload", async (c) => {
   return c.json(results);
 });
 
-app.get("/chat/:runId", async (c) => {
+app.get("/chat/:runId/stream", async (c) => {
   if (!c.var.authState) {
     return c.text("Unauthorized", 401);
   }
