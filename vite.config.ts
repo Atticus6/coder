@@ -121,6 +121,7 @@ export default defineConfig({
     }),
   ],
   nitro: {
+    preset: "bun",
     serverDir: "./server",
     modules: ["workflow/nitro"],
     externals: {
