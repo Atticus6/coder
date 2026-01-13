@@ -27,7 +27,7 @@ async function runMigrations() {
     console.log("✅ Database migrations completed!");
   } catch (error) {
     console.error("❌ Failed to run migrations:", error);
-    process.exit(0);
+    process.exit(1);
   } finally {
     await pgClient.end();
   }
