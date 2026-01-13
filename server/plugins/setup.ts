@@ -6,6 +6,12 @@ import { migrate } from "drizzle-orm/postgres-js/migrator";
 import { definePlugin } from "nitro";
 import postgres from "postgres";
 
+/**
+ * Set up the "workflow" database schema and apply Drizzle migrations from the project's drizzle folder.
+ *
+ * Ensures the PostgreSQL schema named "workflow" exists, runs migrations using the DATABASE_URL from the environment,
+ * logs progress, and closes the database connection. On migration failure the process exits with code 1.
+ */
 async function runMigrations() {
   console.log("🔧 Setting up database schema...");
 
