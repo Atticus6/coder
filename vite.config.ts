@@ -1,4 +1,3 @@
-import { execSync } from "node:child_process";
 import { cpSync, existsSync } from "node:fs";
 import { resolve } from "node:path";
 import tailwindcss from "@tailwindcss/vite";
@@ -10,8 +9,6 @@ import { defineConfig } from "vite";
 import viteCompression from "vite-plugin-compression";
 import viteTsConfigPaths from "vite-tsconfig-paths";
 import { workflow } from "workflow/vite";
-
-let generated = false;
 
 export default defineConfig({
   build: {
@@ -82,15 +79,15 @@ export default defineConfig({
   plugins: [
     {
       name: "drizzle",
-      buildStart() {
-        if (generated) {
-          return;
-        }
-        console.log("🔄 Generating drizzle SQL...");
-        execSync("bun run db:generate", { stdio: "inherit" });
-        generated = true;
-        console.log("✅ Drizzle SQL generated");
-      },
+      // buildStart() {
+      //   if (generated) {
+      //     return;
+      //   }
+      //   console.log("🔄 Generating drizzle SQL...");
+      //   execSync("bun run db:generate", { stdio: "inherit" });
+      //   generated = true;
+      //   console.log("✅ Drizzle SQL generated");
+      // },
       closeBundle() {
         const srcDir = resolve(__dirname, "drizzle");
         const destDir = resolve(__dirname, ".output/drizzle");
