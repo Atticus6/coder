@@ -17,8 +17,9 @@ RUN bun run build
 
 # Stage 2: 使用 bun 运行
 FROM oven/bun:1-slim AS runner
-
 WORKDIR /app
+COPY --from=builder /app/.output ./
+
 
 # 设置环境变量
 ENV NODE_ENV=production
